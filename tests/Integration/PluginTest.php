@@ -78,6 +78,20 @@ final class PluginTest extends WP_UnitTestCase {
 		return Plugin::init( $this->transport );
 	}
 
+	public function test_the_missing_sdk_notice_is_dismissible_and_says_how_to_fix_it(): void {
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		ob_start();
+		Plugin::sdk_notice();
+		$html = (string) ob_get_clean();
+		$this->assertStringContainsString( 'is-dismissible', $html );
+		$this->assertStringContainsString( 'composer install --no-dev', $html );
+
+		wp_set_current_user( 0 );
+		ob_start();
+		Plugin::sdk_notice();
+		$this->assertSame( '', (string) ob_get_clean(), 'visitors see nothing' );
+	}
+
 	public function test_off_without_dsn(): void {
 		$this->assertFalse( Plugin::init( $this->transport ) );
 		\Sentry\captureMessage( 'x' );

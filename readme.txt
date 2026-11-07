@@ -1,10 +1,10 @@
 === Shakewell Error Reporting for Sentry ===
-Contributors: shakewell
+Contributors: shakewellagency
 Tags: sentry, error reporting, errors, monitoring, debugging
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,6 +22,10 @@ Starts Sentry's official PHP SDK (`sentry/sentry`) from constants or environment
 * No settings page. Configuration lives in `wp-config.php` or the environment, where secrets belong.
 
 The release zip includes the production `vendor/` folder with the Sentry SDK. If you install with Composer instead, the SDK comes in as a normal dependency.
+
+= Third-party libraries =
+
+The release zip bundles the Sentry PHP SDK and the libraries it needs, all under the MIT licence (GPL-compatible): `sentry/sentry`, `composer/installers`, `guzzlehttp/psr7`, `jean85/pretty-package-versions`, `psr/http-factory`, `psr/http-message`, `psr/log`, `symfony/options-resolver`, `symfony/deprecation-contracts`, `symfony/polyfill-php80` and `symfony/polyfill-php82`. Their source is plain PHP. The version ranges are in the `composer.json` shipped in the zip and the exact versions in `composer.lock` in the GitHub repository (https://github.com/shakewellagency/shakewell-sentry), and `composer install --no-dev` rebuilds the `vendor/` folder.
 
 = External services =
 
@@ -74,7 +78,7 @@ Deactivate and remove `wp-sentry`, install this plugin, and leave your existing 
 
 = Nothing arrives in Sentry. =
 
-Check the DSN, that the site can make outbound HTTPS requests to Sentry, and that the SDK is present (the release zip includes it; a Composer install needs `composer install` to have run). The plugin never prints errors, so check the PHP error log.
+Check the DSN, that the site can make outbound HTTPS requests to Sentry, and that the SDK is present (the release zip includes it; a Composer install needs `composer install` to have run). If a DSN is set but the SDK is missing, administrators see a notice in the dashboard. The plugin never prints errors, so also check the PHP error log.
 
 = Does it send personal data? =
 
@@ -89,6 +93,12 @@ No.
 Please do not open a public issue. Follow SECURITY.md in the plugin's repository.
 
 == Changelog ==
+
+= 0.1.1 =
+* Works on any site: removed wording that assumed one hosting setup.
+* Shows a dismissible admin notice when a DSN is set but the Sentry SDK is missing.
+* The release zip now includes `composer.json` and leaves out documentation and development files of the bundled libraries.
+* Readme lists the bundled libraries and their licences, and the contributor is corrected.
 
 = 0.1.0 =
 * First release.

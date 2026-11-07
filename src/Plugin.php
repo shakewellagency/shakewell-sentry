@@ -72,11 +72,12 @@ final class Plugin {
 		if ( null === $dsn ) {
 			return false;
 		}
-		// Composer-managed sites (Bedrock) autoload the SDK from the root vendor folder; the release zip carries its own.
+		// Sites that manage plugins with Composer may autoload the SDK from their own vendor folder; the release zip carries its own.
 		if ( ! class_exists( ClientBuilder::class ) && is_file( __DIR__ . '/../vendor/autoload.php' ) ) {
 			require_once __DIR__ . '/../vendor/autoload.php';
 		}
 		if ( ! class_exists( ClientBuilder::class ) ) {
+			add_action( 'admin_notices', array( self::class, 'sdk_notice' ) );
 			return false;
 		}
 
@@ -114,6 +115,20 @@ final class Plugin {
 		);
 		$hub->configureScope( static fn( Scope $scope ) => $scope->setTags( $tags ) );
 		return true;
+	}
+
+	/**
+	 * Admin notice shown when a DSN is set but the Sentry SDK is missing (a source checkout without `composer install`).
+	 */
+	public static function sdk_notice(): void {
+		if ( ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-warning is-dismissible"><p>%s</p></div>',
+			esc_html__( 'Shakewell Error Reporting for Sentry has a DSN but the Sentry SDK is missing, so no errors are reported. Install the plugin from its release zip, or run "composer install --no-dev" in the plugin folder.', 'shakewell-sentry' )
+		);
 	}
 
 	/**
