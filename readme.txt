@@ -25,7 +25,7 @@ The release zip includes the production `vendor/` folder with the Sentry SDK. If
 
 = Third-party libraries =
 
-The release zip bundles the Sentry PHP SDK and the libraries it needs, all under the MIT licence (GPL-compatible): `sentry/sentry`, `guzzlehttp/psr7`, `jean85/pretty-package-versions`, `psr/http-factory`, `psr/http-message`, `psr/log`, `symfony/options-resolver`, `symfony/deprecation-contracts`, `symfony/polyfill-php80` and `symfony/polyfill-php82`. Their source is plain PHP. The exact versions are listed in the plugin's `composer.json` and `composer.lock` in the GitHub repository (https://github.com/shakewellagency/shakewell-sentry), and `composer install --no-dev` rebuilds the `vendor/` folder.
+The release zip bundles the Sentry PHP SDK and the libraries it needs, all under the MIT licence (GPL-compatible): `sentry/sentry`, `composer/installers`, `guzzlehttp/psr7`, `jean85/pretty-package-versions`, `psr/http-factory`, `psr/http-message`, `psr/log`, `symfony/options-resolver`, `symfony/deprecation-contracts`, `symfony/polyfill-php80` and `symfony/polyfill-php82`. Their source is plain PHP. The version ranges are in the `composer.json` shipped in the zip and the exact versions in `composer.lock` in the GitHub repository (https://github.com/shakewellagency/shakewell-sentry), and `composer install --no-dev` rebuilds the `vendor/` folder.
 
 = External services =
 
