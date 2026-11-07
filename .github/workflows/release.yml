@@ -28,6 +28,8 @@ jobs:
         run: |
           slug="${GITHUB_REPOSITORY#*/}"
           composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+          # Leave out what the SDK's packages only use for their own development, never their licence files.
+          find vendor \( -type d \( -name docs -o -name tests -o -name .github \) -o -type f \( -iname '*.md' -o -name 'rector.php' -o -name 'phpstan*' -o -name 'psalm*' -o -name 'phpunit*' -o -name '.php-cs-fixer*' \) \) ! -iname 'licen*' -prune -exec rm -rf {} +
           mkdir -p "build/$slug"
           rsync -a --exclude-from=.distignore --exclude=.git --exclude=build ./ "build/$slug/"
           (cd build && zip -qr "../$slug.zip" "$slug")
