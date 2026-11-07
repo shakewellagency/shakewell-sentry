@@ -1,10 +1,10 @@
 === Shakewell Error Reporting for Sentry ===
-Contributors: shakewell
+Contributors: shakewellagency
 Tags: sentry, error reporting, errors, monitoring, debugging
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,7 +74,7 @@ Deactivate and remove `wp-sentry`, install this plugin, and leave your existing 
 
 = Nothing arrives in Sentry. =
 
-Check the DSN, that the site can make outbound HTTPS requests to Sentry, and that the SDK is present (the release zip includes it; a Composer install needs `composer install` to have run). The plugin never prints errors, so check the PHP error log.
+Check the DSN, that the site can make outbound HTTPS requests to Sentry, and that the SDK is present (the release zip includes it; a Composer install needs `composer install` to have run). If a DSN is set but the SDK is missing, administrators see a notice in the dashboard. The plugin never prints errors, so also check the PHP error log.
 
 = Does it send personal data? =
 
@@ -89,6 +89,11 @@ No.
 Please do not open a public issue. Follow SECURITY.md in the plugin's repository.
 
 == Changelog ==
+
+= 0.1.1 =
+* Works on any site: removed wording that assumed one hosting setup.
+* Shows a dismissible admin notice when a DSN is set but the Sentry SDK is missing.
+* Readme contributor corrected.
 
 = 0.1.0 =
 * First release.
