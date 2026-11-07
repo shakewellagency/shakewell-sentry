@@ -23,6 +23,10 @@ Starts Sentry's official PHP SDK (`sentry/sentry`) from constants or environment
 
 The release zip includes the production `vendor/` folder with the Sentry SDK. If you install with Composer instead, the SDK comes in as a normal dependency.
 
+= Third-party libraries =
+
+The release zip bundles the Sentry PHP SDK and the libraries it needs, all under the MIT licence (GPL-compatible): `sentry/sentry`, `guzzlehttp/psr7`, `jean85/pretty-package-versions`, `psr/http-factory`, `psr/http-message`, `psr/log`, `symfony/options-resolver`, `symfony/deprecation-contracts`, `symfony/polyfill-php80` and `symfony/polyfill-php82`. Their source is plain PHP. The exact versions are listed in the plugin's `composer.json` and `composer.lock` in the GitHub repository (https://github.com/shakewellagency/shakewell-sentry), and `composer install --no-dev` rebuilds the `vendor/` folder.
+
 = External services =
 
 This plugin sends error events to Sentry, either the hosted service at sentry.io or a self-hosted Sentry, whichever your DSN points to. It sends nothing anywhere else and sends nothing until you set a DSN.
@@ -93,7 +97,8 @@ Please do not open a public issue. Follow SECURITY.md in the plugin's repository
 = 0.1.1 =
 * Works on any site: removed wording that assumed one hosting setup.
 * Shows a dismissible admin notice when a DSN is set but the Sentry SDK is missing.
-* Readme contributor corrected.
+* The release zip now includes `composer.json` and leaves out documentation and development files of the bundled libraries.
+* Readme lists the bundled libraries and their licences, and the contributor is corrected.
 
 = 0.1.0 =
 * First release.
