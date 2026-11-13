@@ -55,7 +55,7 @@ Each can be a PHP constant or an environment variable of the same name. A consta
 * `SHAKEWELL_SENTRY_ENVIRONMENT` (also reads `WP_SENTRY_ENV`): for example `production` or `staging`.
 * `SHAKEWELL_SENTRY_RELEASE` (also reads `WP_SENTRY_VERSION`): a version or commit hash.
 * `SHAKEWELL_SENTRY_SAMPLE_RATE`: a number from 0 to 1. Default 1 (every event).
-* `SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES`: set to `true` to stop sending PHP warnings, notices and deprecations raised in third-party plugin code. Default off. Fatal errors and exceptions are always sent, and so is anything from the theme, core and plugins whose folder starts with `shakewell-`. The filter `shakewell_sentry_third_party_paths` changes which path prefixes count as third-party (default: the plugins directory).
+* `SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES`: set to `true` to stop sending PHP warnings, notices and deprecations raised in third-party plugin code. Default off. Fatal errors and ordinary exceptions are always sent (the decision rests on the severity of an ErrorException, so one with warning severity that plugin code throws itself is dropped like a warning), and so is anything from the theme, core and plugins whose folder starts with `shakewell-`. The filter `shakewell_sentry_third_party_paths` changes which path prefixes count as third-party (default: the plugins directory, including a symlinked one; must-use plugins are not covered unless you add their directory).
 
 For each setting the order is: Shakewell constant, wp-sentry constant, Shakewell environment variable, wp-sentry environment variable.
 

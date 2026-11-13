@@ -195,7 +195,9 @@ final class Plugin {
 	 * Whether the event is a non-fatal PHP error raised in third-party plugin code, and the site asked to drop those.
 	 *
 	 * Off unless SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES is truthy. Only warnings, notices and deprecations
-	 * are ever dropped: fatal errors and exceptions always go through. Plugins whose folder starts with
+	 * are ever dropped: fatal errors and exceptions always go through. The decision rests on the severity of
+	 * an \ErrorException, so an ErrorException with warning severity that plugin code throws itself is treated
+	 * the same as a PHP warning. Plugins whose folder starts with
 	 * shakewell- are first-party and are never treated as third-party.
 	 *
 	 * @param EventHint|null $hint The SDK hint, carrying the original exception.
@@ -213,9 +215,14 @@ final class Plugin {
 		/**
 		 * Filters the path prefixes treated as third-party code when skipping plugin notices.
 		 *
-		 * @param string[] $prefixes Defaults to the plugins directory.
+		 * @param string[] $prefixes Defaults to the plugins directory (resolved and as configured). Must-use plugins are not included.
 		 */
-		$prefixes = (array) apply_filters( 'shakewell_sentry_third_party_paths', array( trailingslashit( str_replace( '\\', '/', WP_PLUGIN_DIR ) ) ) );
+		$defaults = array();
+		// PHP reports the resolved path of a file, so a symlinked plugins directory needs its real path as well.
+		foreach ( array_unique( array_filter( array( realpath( WP_PLUGIN_DIR ), WP_PLUGIN_DIR ) ) ) as $dir ) {
+			$defaults[] = trailingslashit( str_replace( '\\', '/', $dir ) );
+		}
+		$prefixes = (array) apply_filters( 'shakewell_sentry_third_party_paths', $defaults );
 		foreach ( $prefixes as $prefix ) {
 			if ( is_string( $prefix ) && '' !== $prefix && 0 === strpos( $file, $prefix ) ) {
 				return 0 !== strpos( substr( $file, strlen( $prefix ) ), 'shakewell-' );
