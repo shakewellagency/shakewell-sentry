@@ -4,7 +4,7 @@ Tags: sentry, error reporting, errors, monitoring, debugging
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.1.1
+Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,6 +55,7 @@ Each can be a PHP constant or an environment variable of the same name. A consta
 * `SHAKEWELL_SENTRY_ENVIRONMENT` (also reads `WP_SENTRY_ENV`): for example `production` or `staging`.
 * `SHAKEWELL_SENTRY_RELEASE` (also reads `WP_SENTRY_VERSION`): a version or commit hash.
 * `SHAKEWELL_SENTRY_SAMPLE_RATE`: a number from 0 to 1. Default 1 (every event).
+* `SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES`: set to `true` to stop sending PHP warnings, notices and deprecations raised in third-party plugin code. Default off. Fatal errors and exceptions are always sent, and so is anything from the theme, core and plugins whose folder starts with `shakewell-`. The filter `shakewell_sentry_third_party_paths` changes which path prefixes count as third-party (default: the plugins directory).
 
 For each setting the order is: Shakewell constant, wp-sentry constant, Shakewell environment variable, wp-sentry environment variable.
 
@@ -93,6 +94,9 @@ No.
 Please do not open a public issue. Follow SECURITY.md in the plugin's repository.
 
 == Changelog ==
+
+= 0.2.0 =
+* New option SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES: drops warnings, notices and deprecations raised in third-party plugin code. Off by default.
 
 = 0.1.1 =
 * Works on any site: removed wording that assumed one hosting setup.

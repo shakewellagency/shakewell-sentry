@@ -26,10 +26,11 @@ final class Plugin {
 	 * Setting name => constants to look for, in order. The wp-sentry names are accepted so a site can switch without renaming.
 	 */
 	private const NAMES = array(
-		'dsn'         => array( 'SHAKEWELL_SENTRY_DSN', 'WP_SENTRY_PHP_DSN' ),
-		'environment' => array( 'SHAKEWELL_SENTRY_ENVIRONMENT', 'WP_SENTRY_ENV' ),
-		'release'     => array( 'SHAKEWELL_SENTRY_RELEASE', 'WP_SENTRY_VERSION' ),
-		'sample_rate' => array( 'SHAKEWELL_SENTRY_SAMPLE_RATE' ),
+		'dsn'                 => array( 'SHAKEWELL_SENTRY_DSN', 'WP_SENTRY_PHP_DSN' ),
+		'environment'         => array( 'SHAKEWELL_SENTRY_ENVIRONMENT', 'WP_SENTRY_ENV' ),
+		'release'             => array( 'SHAKEWELL_SENTRY_RELEASE', 'WP_SENTRY_VERSION' ),
+		'sample_rate'         => array( 'SHAKEWELL_SENTRY_SAMPLE_RATE' ),
+		'skip_plugin_notices' => array( 'SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES' ),
 	);
 
 	/**
@@ -42,7 +43,7 @@ final class Plugin {
 	/**
 	 * Returns one setting: constants first (Shakewell names, then wp-sentry names), then environment variables in the same order.
 	 *
-	 * @param string     $key       dsn, environment, release or sample_rate.
+	 * @param string     $key       dsn, environment, release, sample_rate or skip_plugin_notices.
 	 * @param array|null $constants Test seam: name => value instead of real constants.
 	 * @param array|null $env       Test seam: name => value instead of real environment variables.
 	 */
@@ -177,6 +178,10 @@ final class Plugin {
 		}
 		$event->setUser( $user_id > 0 ? UserDataBag::createFromUserIdentifier( (string) $user_id ) : null );
 
+		if ( self::is_third_party_notice( $hint ) ) {
+			return null;
+		}
+
 		/**
 		 * Filters the scrubbed event just before it is sent. Return null to drop it.
 		 *
@@ -184,6 +189,39 @@ final class Plugin {
 		 * @param EventHint|null $hint  The SDK hint (original exception, etc).
 		 */
 		return apply_filters( 'shakewell_sentry_before_send', $event, $hint );
+	}
+
+	/**
+	 * Whether the event is a non-fatal PHP error raised in third-party plugin code, and the site asked to drop those.
+	 *
+	 * Off unless SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES is truthy. Only warnings, notices and deprecations
+	 * are ever dropped: fatal errors and exceptions always go through. Plugins whose folder starts with
+	 * shakewell- are first-party and are never treated as third-party.
+	 *
+	 * @param EventHint|null $hint The SDK hint, carrying the original exception.
+	 */
+	private static function is_third_party_notice( ?EventHint $hint ): bool {
+		$exception = $hint->exception ?? null;
+		if ( ! $exception instanceof \ErrorException || ! filter_var( self::setting( 'skip_plugin_notices' ), FILTER_VALIDATE_BOOLEAN ) ) {
+			return false;
+		}
+		$low = E_WARNING | E_NOTICE | E_DEPRECATED | E_USER_WARNING | E_USER_NOTICE | E_USER_DEPRECATED | E_CORE_WARNING | E_COMPILE_WARNING;
+		if ( ! ( $exception->getSeverity() & $low ) ) {
+			return false;
+		}
+		$file = str_replace( '\\', '/', $exception->getFile() );
+		/**
+		 * Filters the path prefixes treated as third-party code when skipping plugin notices.
+		 *
+		 * @param string[] $prefixes Defaults to the plugins directory.
+		 */
+		$prefixes = (array) apply_filters( 'shakewell_sentry_third_party_paths', array( trailingslashit( str_replace( '\\', '/', WP_PLUGIN_DIR ) ) ) );
+		foreach ( $prefixes as $prefix ) {
+			if ( is_string( $prefix ) && '' !== $prefix && 0 === strpos( $file, $prefix ) ) {
+				return 0 !== strpos( substr( $file, strlen( $prefix ) ), 'shakewell-' );
+			}
+		}
+		return false;
 	}
 
 	/**

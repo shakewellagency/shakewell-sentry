@@ -42,7 +42,7 @@ final class FakeTransport implements TransportInterface {
 
 final class PluginTest extends WP_UnitTestCase {
 
-	private const VARS = array( 'SHAKEWELL_SENTRY_DSN', 'SHAKEWELL_SENTRY_ENVIRONMENT', 'SHAKEWELL_SENTRY_RELEASE', 'SHAKEWELL_SENTRY_SAMPLE_RATE', 'WP_SENTRY_PHP_DSN', 'WP_SENTRY_ENV', 'WP_SENTRY_VERSION' );
+	private const VARS = array( 'SHAKEWELL_SENTRY_DSN', 'SHAKEWELL_SENTRY_ENVIRONMENT', 'SHAKEWELL_SENTRY_RELEASE', 'SHAKEWELL_SENTRY_SAMPLE_RATE', 'SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES', 'WP_SENTRY_PHP_DSN', 'WP_SENTRY_ENV', 'WP_SENTRY_VERSION' );
 
 	private FakeTransport $transport;
 
@@ -196,5 +196,56 @@ final class PluginTest extends WP_UnitTestCase {
 		add_filter( 'shakewell_sentry_before_send', '__return_null' );
 		\Sentry\captureMessage( 'dropped' );
 		$this->assertSame( array(), $this->transport->events );
+	}
+
+	private function captured_after_error( int $severity, string $file, array $env = array( 'SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES' => 'true' ) ): int {
+		$this->start( $env );
+		\Sentry\captureException( new ErrorException( 'e', 0, $severity, $file, 1 ) );
+		return count( $this->transport->events );
+	}
+
+	public function test_plugin_notices_are_kept_unless_the_option_is_on(): void {
+		$file = WP_PLUGIN_DIR . '/other-plugin/a.php';
+		$this->assertSame( 1, $this->captured_after_error( E_WARNING, $file, array() ) );
+	}
+
+	public function test_third_party_plugin_notices_are_dropped_when_on(): void {
+		$plugin = WP_PLUGIN_DIR . '/other-plugin/a.php';
+		foreach ( array( E_WARNING, E_NOTICE, E_DEPRECATED, E_USER_WARNING, E_USER_NOTICE, E_USER_DEPRECATED ) as $severity ) {
+			$this->setUp_fresh();
+			$this->assertSame( 0, $this->captured_after_error( $severity, $plugin ), "severity $severity" );
+		}
+	}
+
+	public function test_fatal_errors_and_other_code_are_never_dropped(): void {
+		$cases = array(
+			'fatal in plugin'       => array( E_ERROR, WP_PLUGIN_DIR . '/other-plugin/a.php' ),
+			'user error in plugin'  => array( E_USER_ERROR, WP_PLUGIN_DIR . '/other-plugin/a.php' ),
+			'first-party plugin'    => array( E_WARNING, WP_PLUGIN_DIR . '/shakewell-thing/a.php' ),
+			'theme'                 => array( E_WARNING, WP_CONTENT_DIR . '/themes/t/a.php' ),
+			'core'                  => array( E_WARNING, ABSPATH . 'wp-includes/a.php' ),
+			'plugin name prefix'    => array( E_WARNING, WP_PLUGIN_DIR . '-other/a.php' ),
+		);
+		foreach ( $cases as $name => $case ) {
+			$this->setUp_fresh();
+			$this->assertSame( 1, $this->captured_after_error( $case[0], $case[1] ), $name );
+		}
+	}
+
+	public function test_a_plain_exception_in_plugin_code_is_never_dropped(): void {
+		$this->start( array( 'SHAKEWELL_SENTRY_SKIP_PLUGIN_NOTICES' => 'true' ) );
+		\Sentry\captureException( new \RuntimeException( 'boom' ) );
+		$this->assertCount( 1, $this->transport->events );
+	}
+
+	public function test_the_filter_changes_what_counts_as_third_party(): void {
+		add_filter( 'shakewell_sentry_third_party_paths', static fn() => array( '/vendor-code/' ) );
+		$this->assertSame( 0, $this->captured_after_error( E_WARNING, '/vendor-code/x.php' ) );
+		$this->setUp_fresh();
+		$this->assertSame( 1, $this->captured_after_error( E_WARNING, WP_PLUGIN_DIR . '/other-plugin/a.php' ) );
+	}
+
+	private function setUp_fresh(): void {
+		$this->transport = new FakeTransport();
 	}
 }
